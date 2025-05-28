@@ -16,6 +16,7 @@ export const convertToClassModel = (classDoc: any): ClassModel => {
     });
 
     return new ClassModel(
+        classDoc.classId,
         classDoc.classType,
         classDoc.title,
         classDoc.subject,

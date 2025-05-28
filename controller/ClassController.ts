@@ -1,38 +1,35 @@
 import { Request, Response } from 'express';
 import * as classService from '../service/ClassService';
 import {convertToClassModel} from "../mapping/classMapper";
+import {generateClassID} from "../IDgenarate/ClassIDGenerater";
+import {Class} from "../schema/ClassSchema";
 
 
 export const createClass = async (req: Request, res: Response) => {
-    console.log('req.body:', req.body);
-    console.log('req.file:', req.file);
-try{
-    const {
-        classType,
-        title,
-        subject,
-        location,
-        date,
-        time,
-        fee,
-        teacherID
-    } = req.body;
+    try {
+        const classId = await generateClassID();
+        const { classType, title, subject, location, date, time, fee, teacherID, studentIDs } = req.body;
+        const classImage = req.file?.filename || '';
 
-    if ( !classType || !title || !subject || !location || !date || !time || !fee || !teacherID) {
-        res.status(400).json({ message: 'Missing required fields' });
-    }
+        const classData = {
+            classId,
+            classType,
+            title,
+            subject,
+            location,
+            date,
+            time,
+            fee,
+            teacherID,
+            studentIDs,
+            classImage,
+        };
 
-    if (req.file) {
-        req.body.classImage = req.file.filename;
-    }
-
-
-    const classObj = await classService.createClass(req.body);
-        res.status(201).json(classObj);
-
-    } catch (err) {
-        console.error('Error creating class:', err);
-        res.status(500).json({ message: 'Server error', error: err });
+        const savedClass = await classService.createClass(classData);
+        res.status(201).json({ message: 'Class created successfully', data: savedClass });
+    } catch (error) {
+        console.error('Error creating class:', error);
+        res.status(500).json({ message: 'Failed to create class'});
     }
 };
 
