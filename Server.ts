@@ -4,6 +4,7 @@ import { connectDB } from './config/db';
 import userRoutes from './routes/UserRoute';
 import classRoutes from './routes/ClassRoute';
 import path from 'path';
+import userClassDetailsRoute from "./routes/UserClassDetailsRoute";
 
 const app = express();
 const PORT = 3000;
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/users', userRoutes);
 app.use('/api/classes', classRoutes);
+app.use('/api/userClassDetails', userClassDetailsRoute);
 
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
