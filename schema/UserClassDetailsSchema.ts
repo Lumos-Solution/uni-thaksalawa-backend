@@ -9,10 +9,12 @@ export interface IUserClassDetails extends Document {
 const UserClassDetailsSchema: Schema = new Schema({
     classId: {
         type:String,
+        ref: 'Class',
         required: true
     },
     userName: {
         type: String,
+        ref:'User',
         required: true
     },
     isJoined: {

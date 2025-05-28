@@ -2,13 +2,12 @@ import { Router } from 'express';
 import {
     createUser,
     deleteUser,
-    findUser,
+    findUser, getPendingRequests,
     getUserEnrolledClasses,
     getUsers,
     signIn
 } from '../controller/UserController';
 import multer from "multer";
-import {deleteUserClassDetail} from "../controller/UserClassDetailsController";
 
 const router = Router();
 
@@ -20,5 +19,6 @@ router.post('/signin', signIn);
 router.get('/find/:userName',findUser);
 router.delete('/delete/:userName',deleteUser);
 router.get('/getEnrollments/:userName',getUserEnrolledClasses);
+router.get('/getRequests/:userName',getPendingRequests);
 
 export default router;

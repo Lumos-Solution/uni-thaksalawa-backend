@@ -40,3 +40,57 @@ export const getEnrolledClassesByUserName = async (userName: string) => {
 
     return enrolledClasses;
 };
+
+
+
+
+export async function getPendingJoinRequestsByTeacher(teacherUserName: string) {
+    if (!teacherUserName || teacherUserName.trim() === '') {
+        throw new Error('Invalid teacherUserName parameter');
+    }
+
+    // 1. Find the teacher by username
+    const teacher = await User.findOne({ userName: teacherUserName.trim() });
+    if (!teacher) {
+        throw new Error('Teacher not found');
+    }
+
+    // 2. Find classes taught by this teacher, get their classId strings
+    const classes = await Class.find({ teacherId: teacher._id }).select('classId');
+    const classIds = classes.map(c => c.classId);
+
+    if (classIds.length === 0) {
+        // No classes found for this teacher, so no pending requests
+        return [];
+    }
+
+    // 3. Find pending join requests with matching classIds and isJoined: false
+    const pendingRequests = await UserClassDetails.find({
+        classId: { $in: classIds },
+        isJoined: false,
+    });
+
+    if (pendingRequests.length === 0) {
+        // No pending requests found
+        return [];
+    }
+
+    // 4. Get the class details for those classIds from pending requests
+    const requestedClassIds = [...new Set(pendingRequests.map(r => r.classId))]; // unique classIds
+    const classDetails = await Class.find({ classId: { $in: requestedClassIds } });
+
+    // 5. Combine the pendingRequests with their class details (optional)
+    // For example, return an array of objects like { request, classInfo }
+    const result = pendingRequests.map((request) => {
+        const classInfo = classDetails.find((cls) => cls.classId === request.classId);
+        return {
+            request,
+            classInfo,
+        };
+    });
+
+    return result;
+}
+
+
+

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as userService from '../service/UserService';
-import {deleteUserByUserName} from "../service/UserService";
+import {deleteUserByUserName, getPendingJoinRequestsByTeacher} from "../service/UserService";
 
 /*export const createUser = async (req: Request, res: Response) => {
     const user = await userService.createUser(req.body);
@@ -115,7 +115,21 @@ export const getUserEnrolledClasses = async (req: Request, res: Response) => {
         const classes = await userService.getEnrolledClassesByUserName(userName);
         res.status(200).json(classes);
     } catch (error) {
-        console.error('Error fetching enrolled classes:', error);
-        res.status(500).json({ message: 'Failed to fetch enrolled classes' });
+        console.error('Error in loading enrolled classes:', error);
+        res.status(500).json({ message: 'Failed to load enrolled classes' });
     }
 };
+
+
+export async function getPendingRequests(req, res) {
+    try {
+        const teacherUserName = req.params.userName; // or from query/body
+
+        const requests = await getPendingJoinRequestsByTeacher(teacherUserName);
+
+        res.json(requests);
+    } catch (error) {
+        res.status(400).json({ message: `Error when loading the requests: ${error.message}` });
+    }
+}
+
