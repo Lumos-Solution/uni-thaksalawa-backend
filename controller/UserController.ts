@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as userService from '../service/UserService';
+import {getAllUsers} from "../service/UserService";
 
 /*export const createUser = async (req: Request, res: Response) => {
     const user = await userService.createUser(req.body);
@@ -50,3 +51,29 @@ export const getUsers = async (req: Request, res: Response) => {
     const users = await userService.getAllUsers();
     res.json(users);
 };
+
+export const signIn = async (req: Request, res: Response) => {
+    try {
+        const { userName, password } = req.body;
+
+        if (!userName || !password) {
+          res.status(400).json({ message: 'Username and password are required' });
+        }
+
+        const users = await userService.getAllUsers();
+
+        const matchedUser = users.find(
+            user => user.userName === userName && user.password === password
+        );
+
+        if (matchedUser) {
+            res.status(200).json({ message: 'Sign-in successful' });
+        } else {
+          res.status(401).json({ message: 'Invalid username or password' });
+        }
+    } catch (error) {
+        console.error('Sign-in error:', error);
+        res.status(500).json({message: 'Server error', error});
+    }
+};
+
