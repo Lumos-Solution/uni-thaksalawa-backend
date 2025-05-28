@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import * as userService from '../service/UserService';
-import {deleteClassById} from "../service/ClassService";
 import {deleteUserByUserName} from "../service/UserService";
 
 /*export const createUser = async (req: Request, res: Response) => {
@@ -106,5 +105,17 @@ export const deleteUser = async (req: Request, res: Response) => {
         res.status(200).json({ message: 'user deleted successfully', result });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+export const getUserEnrolledClasses = async (req: Request, res: Response) => {
+    const { userName } = req.params;
+
+    try {
+        const classes = await userService.getEnrolledClassesByUserName(userName);
+        res.status(200).json(classes);
+    } catch (error) {
+        console.error('Error fetching enrolled classes:', error);
+        res.status(500).json({ message: 'Failed to fetch enrolled classes' });
     }
 };

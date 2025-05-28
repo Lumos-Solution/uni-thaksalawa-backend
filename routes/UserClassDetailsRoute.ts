@@ -13,4 +13,5 @@ router.post('/add', createUserClassDetail);
 router.put('/update', updateUserClassDetail);
 router.delete('/delete', deleteUserClassDetail);
 
+
 export default router;
