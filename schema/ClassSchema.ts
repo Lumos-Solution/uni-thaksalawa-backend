@@ -10,6 +10,7 @@ export interface IClass extends Document {
     fee: number;
     teacherId: mongoose.Types.ObjectId;
     studentIds: mongoose.Types.ObjectId[];
+    classImage?: string;
 }
 
 const ClassSchema: Schema = new Schema(
@@ -23,6 +24,7 @@ const ClassSchema: Schema = new Schema(
         fee: { type: Number, required: true },
         teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
         studentIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        classImage: { type: String },
     },
     { timestamps: true }
 );

@@ -7,8 +7,9 @@ export class ClassModel {
     date: string;
     time: string;
     fee: number;
-    teacherId: string;      // Reference to a User
-    studentIds: string[];   // Array of User IDs
+    classImage:string;
+    teacherId: string;
+    studentList: string[];
 
     constructor(
         classType: string,
@@ -19,7 +20,8 @@ export class ClassModel {
         time: string,
         fee: number,
         teacherId: string,
-        studentIds: string[] = []
+        classImage:string,
+        studentList: string[] = []
     ) {
         this.classType = classType;
         this.title = title;
@@ -28,7 +30,8 @@ export class ClassModel {
         this.date = date;
         this.time = time;
         this.fee = fee;
+        this.classImage=classImage;
         this.teacherId = teacherId;
-        this.studentIds = studentIds;
+        this.studentList = studentList;
     }
 }
