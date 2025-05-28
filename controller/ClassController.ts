@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as classService from '../service/ClassService';
 import {convertToClassModel} from "../mapping/classMapper";
 import {generateClassID} from "../IDgenarate/ClassIDGenerater";
-import {Class} from "../schema/ClassSchema";
+
 
 
 export const createClass = async (req: Request, res: Response) => {

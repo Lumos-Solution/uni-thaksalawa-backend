@@ -2,7 +2,7 @@ import { ClassModel } from '../model/ClassModel';
 import mongoose from 'mongoose';
 
 export const convertToClassModel = (classDoc: any): ClassModel => {
-    // Handle studentList types safely
+
     const studentList = (classDoc.studentList || []).map((student: any) => {
         if (typeof student === 'string') {
             return student;
