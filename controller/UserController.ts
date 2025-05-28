@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as userService from '../service/UserService';
-import {getAllUsers} from "../service/UserService";
+import {deleteClassById} from "../service/ClassService";
 
 /*export const createUser = async (req: Request, res: Response) => {
     const user = await userService.createUser(req.body);
@@ -77,3 +77,33 @@ export const signIn = async (req: Request, res: Response) => {
     }
 };
 
+export const findUser = async (req: Request, res: Response) => {
+    try {
+        const { userName } = req.params;
+        console.log("userName:",userName);
+
+        if (!userName) {
+             res.status(400).json({ message: 'Username is required' });
+        }
+
+        const user = await userService.getUserByUserName(userName);
+        res.status(200).json(user);
+    } catch (err: any) {
+        console.error('Error getting user:', err);
+        res.status(500).json(err);
+    }
+};
+
+/*export const deleteUser = async (req: Request, res: Response) => {
+    try {
+        const {userName } = req.params;
+        if (!userName) {
+            res.status(400).json({ message: 'UserName is required' });
+        }
+
+        const result = await deleteUserByUserName(userName);
+        res.status(200).json({ message: 'user deleted successfully', result });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};*/

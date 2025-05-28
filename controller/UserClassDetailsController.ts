@@ -2,7 +2,6 @@ import {Request, Response} from "express";
 import {UserClassDetails} from "../schema/UserClassDetailsSchema";
 import {
     addUserClassDetails,
-    deleteUserClassDetail,
     deleteUserClassDetails,
     updateUserClassDetails
 } from "../service/UserClassDetailsService";
