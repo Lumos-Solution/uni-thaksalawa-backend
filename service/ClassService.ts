@@ -75,3 +75,13 @@ export const getClassesByTeacherId = async (userName: string) => {
         .populate('studentIds');
 };
 
+export const deleteClassById = async (classId: string) => {
+    const deletedClass = await Class.findOneAndDelete({ classId });
+
+    if (!deletedClass) {
+        throw new Error(`No class found with classId: ${classId}`);
+    }
+
+    return deletedClass;
+};
+
