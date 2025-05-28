@@ -8,9 +8,9 @@ export interface IUser extends Document {
     contact: string;
     location: string;
     userType: 'afterAL' | 'undergraduate' | 'postgraduate' | 'other';
-    roles: ('student' | 'teacher')[];
     enrolledClasses: mongoose.Types.ObjectId[];
     teachingClasses: mongoose.Types.ObjectId[];
+    profilePic?: string;
 }
 
 const UserSchema: Schema = new Schema(
@@ -26,9 +26,9 @@ const UserSchema: Schema = new Schema(
             enum: ['afterAL', 'undergraduate', 'postgraduate', 'other'],
             required: true,
         },
-        roles: [{ type: String, enum: ['student', 'teacher'] }],
         enrolledClasses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Class' }],
         teachingClasses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Class' }],
+        profilePic: { type: String, default: '' }
     },
     { timestamps: true }
 );
