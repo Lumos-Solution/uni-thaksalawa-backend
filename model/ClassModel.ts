@@ -1,5 +1,6 @@
 export class ClassModel {
     _id?: string;
+    classId:string;
     classType: string;
     title: string;
     subject: string;
@@ -12,6 +13,7 @@ export class ClassModel {
     studentList: string[];
 
     constructor(
+        classId:string,
         classType: string,
         title: string,
         subject: string,
@@ -23,6 +25,7 @@ export class ClassModel {
         classImage:string,
         studentList: string[] = []
     ) {
+        this.classId=classId;
         this.classType = classType;
         this.title = title;
         this.subject = subject;
