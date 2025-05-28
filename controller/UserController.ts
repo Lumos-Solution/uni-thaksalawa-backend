@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as userService from '../service/UserService';
 import {deleteClassById} from "../service/ClassService";
+import {deleteUserByUserName} from "../service/UserService";
 
 /*export const createUser = async (req: Request, res: Response) => {
     const user = await userService.createUser(req.body);
@@ -94,7 +95,7 @@ export const findUser = async (req: Request, res: Response) => {
     }
 };
 
-/*export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: Request, res: Response) => {
     try {
         const {userName } = req.params;
         if (!userName) {
@@ -106,4 +107,4 @@ export const findUser = async (req: Request, res: Response) => {
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
-};*/
+};

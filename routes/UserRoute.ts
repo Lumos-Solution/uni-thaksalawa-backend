@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import {createUser, findUser, getUsers, signIn} from '../controller/UserController';
+import {createUser, deleteUser, findUser, getUsers, signIn} from '../controller/UserController';
 import multer from "multer";
 
 const router = Router();
@@ -10,5 +10,6 @@ router.post('/signup', upload.single('profilePic'), createUser);
 router.get('/getAll', getUsers);
 router.post('/signin', signIn);
 router.get('/find/:userName',findUser);
+router.delete('/delete/:userName',deleteUser);
 
 export default router;

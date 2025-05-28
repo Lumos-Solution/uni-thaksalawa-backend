@@ -17,4 +17,6 @@ export const getUserByUserName = async (userName: string) => {
     return user;
 };
 
-
+export const deleteUserByUserName = async (userName: string) => {
+    return await User.findOneAndDelete({ userName });
+};
