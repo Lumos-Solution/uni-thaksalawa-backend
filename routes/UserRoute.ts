@@ -5,7 +5,7 @@ import {
     findUser, getPendingRequests,
     getUserEnrolledClasses,
     getUsers,
-    signIn
+    signIn, updateUser
 } from '../controller/UserController';
 import multer from "multer";
 
@@ -16,6 +16,7 @@ const upload = multer({ dest: 'uploads/profilePics/' });
 router.post('/signup', upload.single('profilePic'), createUser);
 router.get('/getAll', getUsers);
 router.post('/signin', signIn);
+router.put('/update', upload.single('profilePic'),updateUser);
 router.get('/find/:userName',findUser);
 router.delete('/delete/:userName',deleteUser);
 router.get('/getEnrollments/:userName',getUserEnrolledClasses);

@@ -2,6 +2,8 @@ import {IUser, User} from '../schema/UserSchema';
 import {UserModel} from "../model/UserModel";
 import {UserClassDetails} from "../schema/UserClassDetailsSchema";
 import {Class} from "../schema/ClassSchema";
+import {Schema, Types} from "mongoose";
+
 
 export const createUser = async (userData: any) => {
     return await User.create(userData);
@@ -41,8 +43,23 @@ export const getEnrolledClassesByUserName = async (userName: string) => {
     return enrolledClasses;
 };
 
+export async function updateUser(userName:string, updateData:any) {
+    if (!userName || typeof userName !== 'string') {
+        throw new Error('Invalid userName');
+    }
 
+    const updatedUser = await User.findOneAndUpdate(
+        { userName: userName.trim() },
+        { $set: updateData },
+        { new: true, runValidators: true }
+    );
 
+    if (!updatedUser) {
+        throw new Error('User not found');
+    }
+
+    return updatedUser;
+}
 
 export async function getPendingJoinRequestsByTeacher(teacherUserName: string) {
     if (!teacherUserName || teacherUserName.trim() === '') {

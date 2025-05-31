@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as userService from '../service/UserService';
 import {deleteUserByUserName, getPendingJoinRequestsByTeacher} from "../service/UserService";
+import {updateUserClassDetails} from "../service/UserClassDetailsService";
 
 /*export const createUser = async (req: Request, res: Response) => {
     const user = await userService.createUser(req.body);
@@ -108,6 +109,30 @@ export const deleteUser = async (req: Request, res: Response) => {
     }
 };
 
+export const updateUser = async (req: Request, res: Response) => {
+    try {
+        console.log("req.body:", req.body);
+        if (req.file) {
+            req.body.profilePic = req.file.filename;
+        }
+
+        const { userName, password, name, email, contact, location, userType } = req.body;
+        if (!userName || !password || !name || !email || !contact || !location || !userType) {
+            res.status(400).json({ message: 'Missing required fields' });
+        }
+        const user = await userService.updateUser(userName,req.body);
+        res.status(201).json({
+            message: 'User details updated successfully',
+        });
+
+    } catch (error) {
+        console.error("Error updating details:", error);
+        res.status(500).json({
+            message: 'Error updating user',
+
+        });
+    }
+};
 export const getUserEnrolledClasses = async (req: Request, res: Response) => {
     const { userName } = req.params;
 
@@ -121,7 +146,7 @@ export const getUserEnrolledClasses = async (req: Request, res: Response) => {
 };
 
 
-export async function getPendingRequests(req, res) {
+export async function getPendingRequests(req:Request, res:Response) {
     try {
         const teacherUserName = req.params.userName; // or from query/body
 
@@ -129,7 +154,7 @@ export async function getPendingRequests(req, res) {
 
         res.json(requests);
     } catch (error) {
-        res.status(400).json({ message: `Error when loading the requests: ${error.message}` });
+        res.status(400).json({ message: `Error when loading the requests` });
     }
 }
 
