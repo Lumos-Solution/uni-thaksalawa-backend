@@ -68,7 +68,7 @@ export const signIn = async (req: Request, res: Response) => {
         );
 
         if (matchedUser) {
-            res.status(200).json({ message: 'Sign-in successful' });
+            res.status(200).json({ message: 'success' });
         } else {
           res.status(401).json({ message: 'Invalid username or password' });
         }
