@@ -1,7 +1,6 @@
 import { Class } from '../schema/ClassSchema';
 import mongoose from 'mongoose';
 import {User} from "../schema/UserSchema";
-import {generateClassID} from "../IDgenarate/ClassIDGenerater";
 
 
 export const createClass = async (classData: any) => {

@@ -33,7 +33,7 @@ export const updateUserClassDetail = async (req: Request, res: Response) => {
         const userClassData = await updateUserClassDetails(req.body.userName,req.body.classId);
 
             res.status(201).json({
-            message: 'User-Class detail updated successfully',
+            message: 'success',
             data: userClassData
         });
 
