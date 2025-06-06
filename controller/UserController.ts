@@ -117,7 +117,7 @@ export const updateUser = async (req: Request, res: Response) => {
         }
 
         const { userName, password, name, email, contact, location, userType } = req.body;
-        if (!userName || !password || !name || !email || !contact || !location || !userType) {
+        if (!userName  || !name || !email || !contact || !location || !userType) {
             res.status(400).json({ message: 'Missing required fields' });
         }
         const user = await userService.updateUser(userName,req.body);
