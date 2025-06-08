@@ -39,8 +39,9 @@ export const createUser = async (req: Request, res: Response) => {
         }
 
         const user = await userService.createUser(req.body);
-
-        res.status(201).json(user);
+        if (user!=null){
+            res.status(201).json({message:"success"});
+        }
     } catch (err) {
         console.error('Error creating user:', err);
         res.status(500).json({ message: 'Server error', error: err });
