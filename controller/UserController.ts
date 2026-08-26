@@ -2,6 +2,33 @@ import { Request, Response } from 'express';
 import * as userService from '../service/UserService';
 import {deleteUserByUserName, getPendingJoinRequestsByTeacher} from "../service/UserService";
 import {updateUserClassDetails} from "../service/UserClassDetailsService";
+import {
+    AuthPayload,
+    signAccessToken,
+    signRefreshToken,
+    verifyRefreshToken,
+} from '../config/jwt';
+
+/** Builds the access/refresh token pair plus the safe user fields for a login response. */
+const buildAuthResponse = (user: any) => {
+    const claims = {
+        sub: String(user._id),
+        userName: user.userName,
+        userType: user.userType,
+    };
+
+    return {
+        accessToken: signAccessToken(claims),
+        refreshToken: signRefreshToken(claims),
+        user: {
+            userName: user.userName,
+            name: user.name,
+            email: user.email,
+            userType: user.userType,
+            profilePic: user.profilePic,
+        },
+    };
+};
 
 /*export const createUser = async (req: Request, res: Response) => {
     const user = await userService.createUser(req.body);
@@ -31,6 +58,7 @@ export const createUser = async (req: Request, res: Response) => {
 
         if (!userName || !password || !name || !email || !contact || !location || !userType) {
             res.status(400).json({ message: 'Missing required fields' });
+            return;
         }
 
 
@@ -59,23 +87,62 @@ export const signIn = async (req: Request, res: Response) => {
         const { userName, password } = req.body;
 
         if (!userName || !password) {
-          res.status(400).json({ message: 'Username and password are required' });
+            res.status(400).json({ message: 'Username and password are required' });
+            return;
         }
 
-        const users = await userService.getAllUsers();
+        const matchedUser = await userService.verifyCredentials(userName, password);
 
-        const matchedUser = users.find(
-            user => user.userName === userName && user.password === password
-        );
-
-        if (matchedUser) {
-            res.status(200).json({ message: 'success' });
-        } else {
-          res.status(401).json({ message: 'Invalid username or password' });
+        if (!matchedUser) {
+            res.status(401).json({ message: 'Invalid username or password' });
+            return;
         }
+
+        res.status(200).json({ message: 'success', ...buildAuthResponse(matchedUser) });
     } catch (error) {
         console.error('Sign-in error:', error);
         res.status(500).json({message: 'Server error', error});
+    }
+};
+
+/**
+ * Exchanges a still-valid refresh token for a fresh access/refresh pair, so the
+ * user is not signed out every time the short-lived access token expires.
+ */
+export const refreshToken = async (req: Request, res: Response) => {
+    try {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            res.status(400).json({ message: 'Refresh token is required' });
+            return;
+        }
+
+        let payload: AuthPayload;
+        try {
+            payload = verifyRefreshToken(refreshToken);
+        } catch {
+            res.status(401).json({ message: 'Invalid or expired refresh token' });
+            return;
+        }
+
+        // Re-read the user so a deleted or renamed account cannot keep refreshing.
+        const user = await userService.getUserByUserName(payload.userName);
+
+        res.status(200).json(buildAuthResponse(user));
+    } catch (error) {
+        console.error('Refresh error:', error);
+        res.status(401).json({ message: 'Could not refresh session' });
+    }
+};
+
+/** Returns the profile of whoever owns the access token on the request. */
+export const getCurrentUser = async (req: Request, res: Response) => {
+    try {
+        const user = await userService.getUserByUserName(req.auth!.userName);
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(404).json({ message: 'User not found' });
     }
 };
 
@@ -117,11 +184,15 @@ export const updateUser = async (req: Request, res: Response) => {
             req.body.profilePic = req.file.filename;
         }
 
-        const { userName, password, name, email, contact, location, userType } = req.body;
-        if (!userName  || !name || !email || !contact || !location || !userType) {
+        // The username always comes from the token, never from the request body,
+        // so a signed-in user can only ever update their own record.
+        const userName = req.auth!.userName;
+        const { name, email, contact, location, userType } = req.body;
+        if (!name || !email || !contact || !location || !userType) {
             res.status(400).json({ message: 'Missing required fields' });
+            return;
         }
-        const user = await userService.updateUser(userName,req.body);
+        const user = await userService.updateUser(userName, { ...req.body, userName });
         res.status(201).json({
             message: 'User details updated successfully',
         });

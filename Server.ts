@@ -1,3 +1,7 @@
+// Loaded first so that every module below (JWT config in particular) can read
+// its secrets out of process.env.
+import 'dotenv/config';
+
 import express from 'express';
 import cors from 'cors';
 import { connectDB } from './config/db';
@@ -7,7 +11,7 @@ import path from 'path';
 import userClassDetailsRoute from "./routes/UserClassDetailsRoute";
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 connectDB();
 

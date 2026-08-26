@@ -10,7 +10,12 @@ export const createUserClassDetail = async (req: Request, res: Response) => {
     try {
         console.log("req.body:", req.body);
 
-        const userClassData = await addUserClassDetails(req.body);
+        // The enrolling user is taken from the token so nobody can sign another
+        // student up for a class.
+        const userClassData = await addUserClassDetails({
+            ...req.body,
+            userName: req.auth!.userName,
+        });
 
         res.status(201).json({
             message: 'User-Class detail created successfully',

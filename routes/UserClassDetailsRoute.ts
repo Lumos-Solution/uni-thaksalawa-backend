@@ -4,14 +4,16 @@ import {
     deleteUserClassDetail,
     updateUserClassDetail
 } from "../controller/UserClassDetailsController";
+import { authenticate } from '../middleware/auth';
 
 
 
 const router = Router();
 
-router.post('/add', createUserClassDetail);
-router.put('/update', updateUserClassDetail);
-router.delete('/delete', deleteUserClassDetail);
+// Enrolling in a class, and approving or rejecting a request, all require a session.
+router.post('/add', authenticate, createUserClassDetail);
+router.put('/update', authenticate, updateUserClassDetail);
+router.delete('/delete', authenticate, deleteUserClassDetail);
 
 
 export default router;
