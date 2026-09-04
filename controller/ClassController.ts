@@ -4,6 +4,7 @@ import {convertToClassModel} from "../mapping/classMapper";
 import {generateClassID} from "../IDgenarate/ClassIDGenerater";
 import {deleteClassById, updateClassById} from "../service/ClassService";
 import {statusOf} from "../error/AppError";
+import {geocodeTown} from "../service/GeocodeService";
 
 /*
  * Coordinates arrive as JSON because the form is sent as multipart/form-data.
@@ -32,8 +33,12 @@ export const createClass = async (req: Request, res: Response) => {
 
         // Online classes have no place, so the location fields are dropped rather
         // than stored as empty strings.
+        // A pin is exact, so it wins; without one the town name is geocoded so the
+        // class can still be found by a distance search.
         const isPhysical = classType === 'physical';
-        const coordinates = isPhysical ? parseCoordinates(req.body.coordinates) : undefined;
+        const coordinates = isPhysical
+            ? parseCoordinates(req.body.coordinates) ?? (await geocodeTown(location))
+            : undefined;
 
         const classData = {
             classId,
@@ -136,7 +141,9 @@ export const updateClass = async (req: Request, res: Response) => {
             title,
             subject,
             location: isPhysical ? location : '',
-            coordinates: isPhysical ? parseCoordinates(req.body.coordinates) : undefined,
+            coordinates: isPhysical
+                ? parseCoordinates(req.body.coordinates) ?? (await geocodeTown(location))
+                : undefined,
             date,
             time,
             fee,

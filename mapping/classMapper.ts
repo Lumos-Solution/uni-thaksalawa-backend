@@ -6,6 +6,12 @@ const toId = (value: any): string => {
     return typeof value === 'object' && value._id ? value._id.toString() : value.toString();
 };
 
+/** A stored position, or undefined where the class was never geocoded. */
+const toCoordinates = (value: any) => {
+    if (typeof value?.lat !== 'number' || typeof value?.lng !== 'number') return undefined;
+    return { lat: value.lat, lng: value.lng };
+};
+
 export const convertToClassModel = (classDoc: any): ClassModel => {
     const students = classDoc.studentIds || classDoc.studentList || [];
     const teacher = classDoc.teacherId;
@@ -16,10 +22,13 @@ export const convertToClassModel = (classDoc: any): ClassModel => {
         title: classDoc.title,
         subject: classDoc.subject,
         location: classDoc.location,
-        // Only physical classes are pinned, so this is often absent.
-        coordinates: classDoc.coordinates
-            ? { lat: classDoc.coordinates.lat, lng: classDoc.coordinates.lng }
-            : undefined,
+        /*
+         * A class is given its position when it is saved: the teacher's pin if
+         * they dropped one, otherwise the town geocoded by GeocodeService. So
+         * the stored position is the only source here - a class that still has
+         * none is one the backfill has not reached yet.
+         */
+        coordinates: toCoordinates(classDoc.coordinates),
         date: classDoc.date,
         time: classDoc.time,
         fee: classDoc.fee,
