@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as userService from '../service/UserService';
+import { convertToClassModel } from '../mapping/classMapper';
 import {deleteUserByUserName, getPendingJoinRequestsByTeacher} from "../service/UserService";
 import {
     AuthPayload,
@@ -220,8 +221,11 @@ export const getUserEnrolledClasses = async (req: Request, res: Response) => {
     const { userName } = req.params;
 
     try {
-        const classes = await userService.getEnrolledClassesByUserName(userName);
-        res.status(200).json(classes);
+        const { approved, pending } = await userService.getEnrolledClassesByUserName(userName);
+        res.status(200).json({
+            approved: approved.map(convertToClassModel),
+            pending: pending.map(convertToClassModel),
+        });
     } catch (error) {
         console.error('Error in loading enrolled classes:', error);
         res.status(500).json({ message: 'Failed to load enrolled classes' });

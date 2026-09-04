@@ -77,20 +77,26 @@ export const deleteUserByUserName = async (userName: string) => {
 
 
 export const getEnrolledClassesByUserName = async (userName: string) => {
-    // Step 1: Find all rows in UserClassDetails where the user has enrolled
-    const userClassRows = await UserClassDetails.find({ userName, isJoined: true });
-
-    if (userClassRows.length === 0) {
-        return [];
+    const rows = await UserClassDetails.find({ userName });
+    if (rows.length === 0) {
+        return { approved: [], pending: [] };
     }
 
-    // Step 2: Extract all classIds from those rows
-    const classIds = userClassRows.map(row => row.classId);
+    const classes = await Class.find({
+        classId: { $in: rows.map((row) => row.classId) },
+    }).populate('teacherId');
 
-    // Step 3: Find all classes matching those IDs
-    const enrolledClasses = await Class.find({ classId: { $in: classIds } });
+    /*
+     * A student sees two lists: the classes a teacher has let them into, and the
+     * requests still waiting for an answer. Both come from the same rows, told
+     * apart by isJoined.
+     */
+    const classesFor = (isJoined: boolean) => {
+        const ids = rows.filter((row) => row.isJoined === isJoined).map((row) => row.classId);
+        return classes.filter((cls) => ids.includes(cls.classId));
+    };
 
-    return enrolledClasses;
+    return { approved: classesFor(true), pending: classesFor(false) };
 };
 
 export async function updateUser(userName:string, updateData:any) {
