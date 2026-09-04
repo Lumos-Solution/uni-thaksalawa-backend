@@ -15,7 +15,9 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, "uploads")));
+// Multer writes under the process working directory, so the static mount has to
+// point there too - not at the compiled __dirname.
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/api/user', userRoutes);
 app.use('/api/class', classRoutes);
 app.use('/api/userClassDetails', userClassDetailsRoute);
