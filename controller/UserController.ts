@@ -70,9 +70,21 @@ export const createUser = async (req: Request, res: Response) => {
         if (user!=null){
             res.status(201).json({message:"success"});
         }
-    } catch (err) {
+    } catch (err: any) {
         console.error('Error creating user:', err);
-        res.status(500).json({ message: 'Server error', error: err });
+
+        // A duplicate userName is the caller's problem, not a server fault.
+        if (err?.code === 11000) {
+            res.status(409).json({ message: 'That username is already taken' });
+            return;
+        }
+
+        if (err?.name === 'ValidationError') {
+            res.status(400).json({ message: err.message });
+            return;
+        }
+
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
