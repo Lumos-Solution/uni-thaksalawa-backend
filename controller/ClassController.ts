@@ -13,12 +13,34 @@ export const createClass = async (req: Request, res: Response) => {
         const { classType, title, subject, location, date, time, fee, teacherID, studentIDs } = req.body;
         const classImage = req.file?.filename || '';
 
+        /*
+         * Online classes have no place, so the location fields are dropped rather
+         * than stored as empty strings. Coordinates arrive as JSON because the
+         * form is sent as multipart/form-data.
+         */
+        const isPhysical = classType === 'physical';
+        let coordinates;
+        if (isPhysical && req.body.coordinates) {
+            try {
+                const parsed = typeof req.body.coordinates === 'string'
+                    ? JSON.parse(req.body.coordinates)
+                    : req.body.coordinates;
+                if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) {
+                    coordinates = { lat: parsed.lat, lng: parsed.lng };
+                }
+            } catch {
+                // A malformed pin is not worth failing the whole request over.
+                coordinates = undefined;
+            }
+        }
+
         const classData = {
             classId,
             classType,
             title,
             subject,
-            location,
+            location: isPhysical ? location : '',
+            coordinates,
             date,
             time,
             fee,
