@@ -1,5 +1,11 @@
 import { Router } from 'express';
-import {getClasses, createClass, getClassesByTeacherID, deleteClass} from '../controller/ClassController';
+import {
+    getClasses,
+    createClass,
+    getClassesByTeacherID,
+    updateClass,
+    deleteClass,
+} from '../controller/ClassController';
 import {upload} from "../middleware/multer";
 import { authenticate } from '../middleware/auth';
 
@@ -10,6 +16,7 @@ router.get('/getAll', getClasses);
 
 router.post('/add', authenticate, upload.single('classImage'), createClass);
 router.get('/getClasses/:id', authenticate, getClassesByTeacherID);
+router.put('/update/:id', authenticate, upload.single('classImage'), updateClass);
 router.delete('/delete/:id', authenticate, deleteClass);
 
 

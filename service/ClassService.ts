@@ -1,6 +1,7 @@
 import { Class } from '../schema/ClassSchema';
 import mongoose from 'mongoose';
 import {User} from "../schema/UserSchema";
+import {AppError} from "../error/AppError";
 
 
 export const createClass = async (classData: any) => {
@@ -86,3 +87,37 @@ export const deleteClassById = async (classId: string) => {
     return deletedClass;
 };
 
+
+/**
+ * A class can only be changed by the teacher who owns it, and only while it is
+ * still upcoming - once the start date has arrived the students have already
+ * planned around the details, so they are frozen.
+ */
+export const updateClassById = async (
+    classId: string,
+    teacherUserName: string,
+    updates: Record<string, any>
+) => {
+    const existing = await Class.findOne({ classId });
+    if (!existing) {
+        throw new AppError(`No class found with classId: ${classId}`, 404);
+    }
+
+    const teacher = await User.findById(existing.teacherId);
+    if (!teacher || teacher.userName !== teacherUserName) {
+        throw new AppError('You can only edit your own classes', 403);
+    }
+
+    if (hasStarted(existing.date)) {
+        throw new AppError('This class has already started and can no longer be edited', 400);
+    }
+
+    Object.assign(existing, updates);
+    return await existing.save();
+};
+
+/** Dates are stored as plain YYYY-MM-DD, so a string compare is enough. */
+export const hasStarted = (date: string) => {
+    const today = new Date().toISOString().slice(0, 10);
+    return Boolean(date) && date < today;
+};

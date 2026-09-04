@@ -2,7 +2,25 @@ import { Request, Response } from 'express';
 import * as classService from '../service/ClassService';
 import {convertToClassModel} from "../mapping/classMapper";
 import {generateClassID} from "../IDgenarate/ClassIDGenerater";
-import {deleteClassById} from "../service/ClassService";
+import {deleteClassById, updateClassById} from "../service/ClassService";
+import {statusOf} from "../error/AppError";
+
+/*
+ * Coordinates arrive as JSON because the form is sent as multipart/form-data.
+ * A malformed pin is not worth failing the whole request over - the class just
+ * keeps its town name without a map position.
+ */
+const parseCoordinates = (raw: any) => {
+    if (!raw) return undefined;
+    try {
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        return Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)
+            ? { lat: parsed.lat, lng: parsed.lng }
+            : undefined;
+    } catch {
+        return undefined;
+    }
+};
 
 
 
@@ -12,26 +30,10 @@ export const createClass = async (req: Request, res: Response) => {
         const { classType, title, subject, location, date, time, fee, teacherID, studentIDs } = req.body;
         const classImage = req.file?.filename || '';
 
-        /*
-         * Online classes have no place, so the location fields are dropped rather
-         * than stored as empty strings. Coordinates arrive as JSON because the
-         * form is sent as multipart/form-data.
-         */
+        // Online classes have no place, so the location fields are dropped rather
+        // than stored as empty strings.
         const isPhysical = classType === 'physical';
-        let coordinates;
-        if (isPhysical && req.body.coordinates) {
-            try {
-                const parsed = typeof req.body.coordinates === 'string'
-                    ? JSON.parse(req.body.coordinates)
-                    : req.body.coordinates;
-                if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lng)) {
-                    coordinates = { lat: parsed.lat, lng: parsed.lng };
-                }
-            } catch {
-                // A malformed pin is not worth failing the whole request over.
-                coordinates = undefined;
-            }
-        }
+        const coordinates = isPhysical ? parseCoordinates(req.body.coordinates) : undefined;
 
         const classData = {
             classId,
@@ -123,3 +125,33 @@ export const deleteClass = async (req: Request, res: Response) => {
 
 
 
+
+export const updateClass = async (req: Request, res: Response) => {
+    try {
+        const { classType, title, subject, location, date, time, fee } = req.body;
+        const isPhysical = classType === 'physical';
+
+        const updates: Record<string, any> = {
+            classType,
+            title,
+            subject,
+            location: isPhysical ? location : '',
+            coordinates: isPhysical ? parseCoordinates(req.body.coordinates) : undefined,
+            date,
+            time,
+            fee,
+        };
+
+        // The image is optional on an edit; leaving the file input empty keeps
+        // whatever picture the class already has.
+        if (req.file?.filename) {
+            updates.classImage = req.file.filename;
+        }
+
+        const updated = await updateClassById(req.params.id, req.auth!.userName, updates);
+        res.status(200).json({ message: 'Class updated successfully', data: updated });
+    } catch (error: any) {
+        console.error('Error updating class:', error);
+        res.status(statusOf(error)).json({ message: error.message });
+    }
+};
