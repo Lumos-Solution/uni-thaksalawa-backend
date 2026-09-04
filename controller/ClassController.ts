@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import * as classService from '../service/ClassService';
 import {convertToClassModel} from "../mapping/classMapper";
 import {generateClassID} from "../IDgenarate/ClassIDGenerater";
-import {deleteUserClassDetails} from "../service/UserClassDetailsService";
 import {deleteClassById} from "../service/ClassService";
 
 
@@ -95,16 +94,13 @@ export const getClassesByTeacherID = async (req: Request, res: Response): Promis
 
         if (!id) {
             res.status(400).json({ message: 'Teacher ID is required' });
+            return;
         }
 
+        // A teacher with no classes yet is not an error - the page just shows an
+        // empty list, so an empty array is returned rather than a 404.
         const classes = await classService.getClassesByTeacherId(id);
-
-        if (!classes || classes.length === 0) {
-          res.status(404).json({ message: 'No classes found for this teacher' });
-        }
-
-        const classModels = classes.map(convertToClassModel);
-        res.status(200).json(classModels);
+        res.status(200).json(classes.map(convertToClassModel));
     } catch (err) {
         console.error('Error getting classes by teacher ID:', err);
         res.status(500).json({ message: 'Server error', error: err });

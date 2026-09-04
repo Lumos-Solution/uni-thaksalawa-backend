@@ -1,19 +1,16 @@
 import { Router } from 'express';
 import {
+    approveUserClassDetail,
     createUserClassDetail,
-    deleteUserClassDetail,
-    updateUserClassDetail
+    declineUserClassDetail,
 } from "../controller/UserClassDetailsController";
 import { authenticate } from '../middleware/auth';
 
-
-
 const router = Router();
 
-// Enrolling in a class, and approving or rejecting a request, all require a session.
+// Requesting a class, and approving or declining a request, all require a session.
 router.post('/add', authenticate, createUserClassDetail);
-router.put('/update', authenticate, updateUserClassDetail);
-router.delete('/delete', authenticate, deleteUserClassDetail);
-
+router.put('/approve', authenticate, approveUserClassDetail);
+router.delete('/decline', authenticate, declineUserClassDetail);
 
 export default router;

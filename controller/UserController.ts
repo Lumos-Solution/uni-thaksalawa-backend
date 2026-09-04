@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import * as userService from '../service/UserService';
 import {deleteUserByUserName, getPendingJoinRequestsByTeacher} from "../service/UserService";
-import {updateUserClassDetails} from "../service/UserClassDetailsService";
 import {
     AuthPayload,
     signAccessToken,
