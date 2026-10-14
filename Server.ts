@@ -9,6 +9,8 @@ import userRoutes from './routes/UserRoute';
 import classRoutes from './routes/ClassRoute';
 import path from 'path';
 import userClassDetailsRoute from "./routes/UserClassDetailsRoute";
+import { initSocket } from './socket/socket';
+import http from 'http';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -22,6 +24,8 @@ app.use('/api/user', userRoutes);
 app.use('/api/class', classRoutes);
 app.use('/api/userClassDetails', userClassDetailsRoute);
 
+const server = http.createServer(app);
+initSocket(server, process.env.CLIENT_ORIGIN || 'http://localhost:5173');
 // The database is connected first so that no request can arrive while mongoose
 // is still unconnected - those requests would otherwise sit in the driver's
 // buffer and fail with an opaque timeout.

@@ -1,7 +1,11 @@
+/*
 import { UserClassDetails } from "../schema/UserClassDetailsSchema";
 import { Class } from "../schema/ClassSchema";
 import { User } from "../schema/UserSchema";
 import { AppError } from "../error/AppError";
+
+import { notify } from '../socket/socket';
+
 
 const findClassOrFail = async (classId: string) => {
     const foundClass = await Class.findOne({ classId });
@@ -11,10 +15,10 @@ const findClassOrFail = async (classId: string) => {
     return foundClass;
 };
 
-/**
+/!**
  * Approving and declining are the teacher's decisions alone, so both paths check
  * that the caller actually owns the class before touching the request.
- */
+ *!/
 const findOwnedClassOrFail = async (classId: string, teacherUserName: string) => {
     const foundClass = await findClassOrFail(classId);
     const teacher = await User.findById(foundClass.teacherId);
@@ -96,7 +100,128 @@ export const declineJoinRequest = async (
     return declined;
 };
 
-/** Used when a class is removed, so its requests do not outlive it. */
+/!** Used when a class is removed, so its requests do not outlive it. *!/
+export const deleteUserClassDetails = async (userName: string, classId: string) => {
+    const deleted = await UserClassDetails.findOneAndDelete({ userName, classId });
+
+    if (!deleted) {
+        throw new AppError(`No UserClassDetails found for ${userName} in class ${classId}`, 404);
+    }
+
+    return deleted;
+};
+*/
+
+
+import { UserClassDetails } from "../schema/UserClassDetailsSchema";
+import { Class } from "../schema/ClassSchema";
+import { User } from "../schema/UserSchema";
+import { AppError } from "../error/AppError";
+
+import { notify } from '../socket/socket';
+
+
+const findClassOrFail = async (classId: string) => {
+    const foundClass = await Class.findOne({ classId });
+    if (!foundClass) {
+        throw new AppError(`No class found with classId: ${classId}`, 404);
+    }
+    return foundClass;
+};
+
+const findOwnedClassOrFail = async (classId: string, teacherUserName: string) => {
+    const foundClass = await findClassOrFail(classId);
+    const teacher = await User.findById(foundClass.teacherId);
+
+    if (!teacher || teacher.userName !== teacherUserName) {
+        throw new AppError('Only the teacher of this class can answer its requests', 403);
+    }
+
+    return foundClass;
+};
+
+export const addUserClassDetails = async (userClassData: { userName: string; classId: string }) => {
+    const { userName, classId } = userClassData;
+    const foundClass = await findClassOrFail(classId);
+
+    const teacher = await User.findById(foundClass.teacherId);
+    if (teacher?.userName === userName) {
+        throw new AppError('You cannot request to join your own class', 400);
+    }
+
+    // One row per student and class, so a second click cannot queue a duplicate
+    // request in the teacher's notifications.
+    const existing = await UserClassDetails.findOne({ userName, classId });
+    if (existing) {
+        throw new AppError(
+            existing.isJoined
+                ? 'You are already enrolled in this class'
+                : 'Your request is already waiting for the teacher to approve it',
+            409
+        );
+    }
+
+    const created = await UserClassDetails.create({ userName, classId, isJoined: false });
+
+    // tell the teacher a new request has arrived.
+    if (teacher) {
+        notify(teacher.userName, 'join-request', { userName, classId });
+    }
+
+    return created;
+};
+
+export const approveJoinRequest = async (
+    userName: string,
+    classId: string,
+    teacherUserName: string
+) => {
+    const foundClass = await findOwnedClassOrFail(classId, teacherUserName);
+
+    const approved = await UserClassDetails.findOneAndUpdate(
+        { userName, classId, isJoined: false },
+        { isJoined: true },
+        { new: true }
+    );
+
+    if (!approved) {
+        throw new AppError(`No pending request from ${userName} for class ${classId}`, 404);
+    }
+
+    const student = await User.findOne({ userName });
+    if (student) {
+        await Class.updateOne({ _id: foundClass._id }, { $addToSet: { studentIds: student._id } });
+        await User.updateOne(
+            { _id: student._id },
+            { $addToSet: { enrolledClasses: foundClass._id } }
+        );
+    }
+
+    // tell the student they were accepted.
+    notify(userName, 'request-decided', { classId, approved: true });
+
+    return approved;
+};
+
+export const declineJoinRequest = async (
+    userName: string,
+    classId: string,
+    teacherUserName: string
+) => {
+    await findOwnedClassOrFail(classId, teacherUserName);
+
+    const declined = await UserClassDetails.findOneAndDelete({ userName, classId });
+    if (!declined) {
+        throw new AppError(`No request from ${userName} for class ${classId}`, 404);
+    }
+
+    //  tell the student they were declined.
+    notify(userName, 'request-decided', { classId, approved: false });
+
+    return declined;
+};
+
+
 export const deleteUserClassDetails = async (userName: string, classId: string) => {
     const deleted = await UserClassDetails.findOneAndDelete({ userName, classId });
 
